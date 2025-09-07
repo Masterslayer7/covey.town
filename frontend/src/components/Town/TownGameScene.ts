@@ -421,7 +421,7 @@ export default class TownGameScene extends Phaser.Scene {
         font: '18px monospace',
         color: '#000000',
         // padding: {x: 20, y: 10},
-        backgroundColor: '#ffffff',
+        backgroundColor: '#3bf534ff',
       })
       .setDepth(6);
     this.coveyTownController.ourPlayer.gameObjects = {
@@ -521,6 +521,8 @@ export default class TownGameScene extends Phaser.Scene {
         .sprite(player.location.x, player.location.y, 'atlas', 'misa-front')
         .setSize(30, 40)
         .setOffset(0, 24);
+      
+      console.log(`Checking player: ${player.userName}. Is this our player?`, player === this.coveyTownController.ourPlayer);
       const label = this.add.text(
         player.location.x,
         player.location.y - 20,
@@ -529,7 +531,7 @@ export default class TownGameScene extends Phaser.Scene {
           font: '18px monospace',
           color: '#000000',
           // padding: {x: 20, y: 10},
-          backgroundColor: '#ffffff',
+          backgroundColor: '#ffffffff',
         },
       );
       player.gameObjects = {
