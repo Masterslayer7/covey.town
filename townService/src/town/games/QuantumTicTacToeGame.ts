@@ -6,14 +6,11 @@ import {
 import Game from './Game';
 import TicTacToeGame from './TicTacToeGame';
 import Player from '../../lib/Player';
-<<<<<<< HEAD
-=======
 import InvalidParametersError, {
   GAME_FULL_MESSAGE,
   PLAYER_ALREADY_IN_GAME_MESSAGE,
   PLAYER_NOT_IN_GAME_MESSAGE,
 } from '../../lib/InvalidParametersError';
->>>>>>> 932be92 (partially completed QuantumTicTacToeGame.ts)
 
 /**
  * A QuantumTicTacToeGame is a Game that implements the rules of the Tic-Tac-Toe variant described at https://www.smbc-comics.com/comic/tic.
@@ -24,26 +21,6 @@ export default class QuantumTicTacToeGame extends Game<
   QuantumTicTacToeGameState,
   QuantumTicTacToeMove
 > {
-<<<<<<< HEAD
-  private _games: { A: TicTacToeGame; B: TicTacToeGame; C: TicTacToeGame };
-
-  private _xScore: number;
-
-  private _oScore: number;
-
-  private _moveCount: number;
-
-  public constructor() {
-    // TODO: implement me
-  }
-
-  protected _join(player: Player): void {
-    // TODO: implement me
-  }
-
-  protected _leave(player: Player): void {
-    // TODO: implement me
-=======
   // private _games: { A: TicTacToeGame; B: TicTacToeGame; C: TicTacToeGame };
 
   private _xScore: number = 0;
@@ -153,7 +130,6 @@ export default class QuantumTicTacToeGame extends Game<
         winner: this.state.x,
       };
     }
->>>>>>> 932be92 (partially completed QuantumTicTacToeGame.ts)
   }
 
   /**
