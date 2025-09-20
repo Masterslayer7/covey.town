@@ -1,19 +1,24 @@
 import { createPlayerForTesting } from '../../TestUtils';
+import InvalidParametersError from '../../lib/InvalidParametersError';
 import Player from '../../lib/Player';
 import { GameMove } from '../../types/CoveyTownSocket';
+import Town from '../Town';
 import QuantumTicTacToeGame from './QuantumTicTacToeGame';
 
 describe('QuantumTicTacToeGame', () => {
   let game: QuantumTicTacToeGame;
   let player1: Player;
   let player2: Player;
+  let player3: Player;
 
   beforeEach(() => {
     game = new QuantumTicTacToeGame();
     player1 = createPlayerForTesting();
     player2 = createPlayerForTesting();
+    player3 = createPlayerForTesting();
   });
 
+  
   describe('_join', () => {
     it('should add the first player as X', () => {
       game.join(player1);
@@ -21,6 +26,27 @@ describe('QuantumTicTacToeGame', () => {
       expect(game.state.o).toBeUndefined();
       expect(game.state.status).toBe('WAITING_TO_START');
     });
+    it('Should throw player already in game message', () => {
+      game.join(player1);
+      expect(() => {
+        game.join(player1);
+      })
+      .toThrow(InvalidParametersError)
+    })
+    it('Should throw game full message', () => {
+      game.join(player1);
+      game.join(player2);
+      expect(() => {
+        game.join(player3);
+      }).toThrow(InvalidParametersError)
+    })
+    it('Should add second player as O and sets status to in_progress', () => {
+      game.join(player1);
+      game.join(player2);
+      expect(game.state.x).toBe(player1.id);
+      expect(game.state.o).toBe(player2.id);
+      expect(game.state.status).toBe('IN_PROGRESS')
+    })
   });
 
   describe('_leave', () => {
@@ -35,6 +61,8 @@ describe('QuantumTicTacToeGame', () => {
         expect(game.state.status).toBe('OVER');
         expect(game.state.winner).toBe(player2.id);
       });
+
+      
     });
   });
 
