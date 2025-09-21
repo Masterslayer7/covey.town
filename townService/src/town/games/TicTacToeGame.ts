@@ -30,7 +30,9 @@ export default class TicTacToeGame extends Game<TicTacToeGameState, TicTacToeMov
       ['', '', ''],
     ];
     for (const move of moves) {
-      board[move.row][move.col] = move.gamePiece;
+      if (move.row !== -1 || move.col !== -1) {
+        board[move.row][move.col] = move.gamePiece;
+      }
     }
     return board;
   }
@@ -86,9 +88,9 @@ export default class TicTacToeGame extends Game<TicTacToeGameState, TicTacToeMov
   }
 
   private _validateMove(move: TicTacToeMove) {
-    // A move is valid if the space is empty
+    // A move is valid if the space is empty and not -1
     for (const m of this.state.moves) {
-      if (m.col === move.col && m.row === move.row) {
+      if (m.col === move.col && m.row === move.row && m.row !== -1) {
         throw new InvalidParametersError(BOARD_POSITION_NOT_EMPTY_MESSAGE);
       }
     }

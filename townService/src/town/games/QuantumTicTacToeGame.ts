@@ -194,7 +194,8 @@ export default class QuantumTicTacToeGame extends Game<
 
     console.log('--- APPLYING MOVE ---');
     console.log('Current state before move:', this.state);
-    console.log('Move to apply:', move);
+    console.log('Move to apply:', move.move);
+    console.log('Move to apply:', move.move.gamePiece);
 
     // Selects the subgame
     const targetGame = this._games[move.move.board];
@@ -218,10 +219,10 @@ export default class QuantumTicTacToeGame extends Game<
           };
 
           // Use applymove in subgame with colliding piece so private board updates
-          targetGame.applyMove({
+          this._applyMoveWithBlanks(targetGame, {
             playerID: move.playerID,
             gameID: targetGame.id, // Use the sub-game's ID
-            move: m,
+            move: { row: m.row, col: m.col, board: move.move.board, gamePiece: m.gamePiece },
           });
 
           // sets colliding flag
@@ -233,7 +234,17 @@ export default class QuantumTicTacToeGame extends Game<
     }
 
     if (!isColliding) {
-      targetGame.applyMove(move);
+      console.log('I got to applymove in subgame');
+      this.state = {
+        ...this.state,
+        moves: [...this.state.moves, move.move],
+      };
+
+      this._applyMoveWithBlanks(targetGame, move);
+      this._moveCount++;
+
+      console.log(this._games.A.state.moves);
+      console.log(targetGame.state);
     }
 
     console.log('--- Done MOVE ---');
@@ -241,6 +252,24 @@ export default class QuantumTicTacToeGame extends Game<
 
     this._checkForWins();
     this._checkForGameEnding();
+  }
+
+  private _applyMoveWithBlanks(targetGame: TicTacToeGame, move: GameMove<QuantumTicTacToeMove>) {
+    Object.values(this._games).forEach(game => {
+      console.log(game.id);
+      console.log(targetGame.id);
+      if (game.id === targetGame.id) {
+        console.log('Applied move to subgame: ', move);
+        game.applyMove(move);
+      } else {
+        game.applyMove({
+          playerID: move.playerID,
+          gameID: game.id, // Use the sub-game's ID
+          move: { row: -1, col: -1, gamePiece: move.move.gamePiece },
+        });
+        console.log('Applied blank to subgame: ', game.state);
+      }
+    });
   }
 
   /**
@@ -251,9 +280,9 @@ export default class QuantumTicTacToeGame extends Game<
     Object.values(this._games).forEach(game => {
       if (game.state.status === 'OVER') {
         if (game.state.winner === this.state.x) {
-          this._xScore++;
+          this.state.xScore++;
         } else if (game.state.winner === this.state.o) {
-          this._oScore++;
+          this.state.oScore++;
         }
       }
     });

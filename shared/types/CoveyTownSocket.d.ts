@@ -98,7 +98,7 @@ export interface GameMove<MoveType> {
   move: MoveType;
 }
 
-export type TicTacToeGridPosition = 0 | 1 | 2;
+export type TicTacToeGridPosition = -1 | 0 | 1 | 2;
 
 /**
  * Type for a move in TicTacToe

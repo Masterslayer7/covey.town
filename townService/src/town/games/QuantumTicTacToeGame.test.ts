@@ -1,8 +1,7 @@
 import { createPlayerForTesting } from '../../TestUtils';
 import InvalidParametersError from '../../lib/InvalidParametersError';
 import Player from '../../lib/Player';
-import { GameMove } from '../../types/CoveyTownSocket';
-import Town from '../Town';
+import { GameMove, QuantumTicTacToeMove } from '../../types/CoveyTownSocket';
 import QuantumTicTacToeGame from './QuantumTicTacToeGame';
 
 describe('QuantumTicTacToeGame', () => {
@@ -70,10 +69,10 @@ describe('QuantumTicTacToeGame', () => {
 
     const makeMove = (player: Player, board: 'A' | 'B' | 'C', row: 0 | 1 | 2, col: 0 | 1 | 2) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const move: GameMove<any> = {
+      const move: GameMove<QuantumTicTacToeMove> = {
         playerID: player.id,
         gameID: game.id,
-        move: { board, row, col },
+        move: { board, row, col, gamePiece: player === player1 ? 'X' : 'O' },
       };
       game.applyMove(move);
     };
