@@ -73,11 +73,13 @@ export default class QuantumTicTacToeGameArea extends GameArea<QuantumTicTacToeG
         command.move.gamePiece === 'X' || command.move.gamePiece === 'O',
         'Invalid game piece',
       );
-      game.applyMove({
-        gameID: command.gameID,
-        playerID: player.id,
-        move: command.move,
-      });
+      if ("board" in command.move){
+        game.applyMove({
+          gameID: command.gameID,
+          playerID: player.id,
+          move: command.move,
+        });
+      }
       this._stateUpdated(game.toModel());
       return undefined as InteractableCommandReturnType<CommandType>;
     }
