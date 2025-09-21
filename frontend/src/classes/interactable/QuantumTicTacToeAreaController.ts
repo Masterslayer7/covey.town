@@ -124,39 +124,53 @@ export default class QuantumTicTacToeAreaController extends GameAreaController<
   }
 
   protected _updateFrom(newModel: GameArea<QuantumTicTacToeGameState>): void {
-    super._updateFrom(newModel);
-    // TODO: implement the rest of this
     const wasOurTurn = this.whoseTurn?.id === this._townController.ourPlayer.id;
+
+    super._updateFrom(newModel);
     const newState = newModel.game;
-    const movesLength = newState?.state.moves.length;
     if (newState) {
-      const newBoard: { A: TicTacToeCell[][]; B: TicTacToeCell[][]; C: TicTacToeCell[][] } = 
-      { A: [
-        [undefined, undefined, undefined],
-        [undefined, undefined, undefined],
-        [undefined, undefined, undefined],
-      ],
-    B: [
-        [undefined, undefined, undefined],
-        [undefined, undefined, undefined],
-        [undefined, undefined, undefined],
-      ],C: [
-        [undefined, undefined, undefined],
-        [undefined, undefined, undefined],
-        [undefined, undefined, undefined],
-      ]};
+      const newBoard: { A: TicTacToeCell[][]; B: TicTacToeCell[][]; C: TicTacToeCell[][] } = {
+        A: [
+          [undefined, undefined, undefined],
+          [undefined, undefined, undefined],
+          [undefined, undefined, undefined],
+        ],
+        B: [
+          [undefined, undefined, undefined],
+          [undefined, undefined, undefined],
+          [undefined, undefined, undefined],
+        ],
+        C: [
+          [undefined, undefined, undefined],
+          [undefined, undefined, undefined],
+          [undefined, undefined, undefined],
+        ],
+      };
       newState.state.moves.forEach(move => {
-        newBoard[move.board][move.row][move.col] = move.gamePiece;
+        // If its my enemies move
+        if (this.gamePiece !== move.gamePiece) {
+          // Collision happened this turn, reveal other players gamePiece
+          if (
+            newBoard[move.board][move.row][move.col] === undefined &&
+            newState.state.publiclyVisible[move.board][move.row][move.col]
+          ) {
+            newBoard[move.board][move.row][move.col] = this.gamePiece === 'X' ? 'O' : 'X';
+          }
+        }
+        // If its my move
+        else {
+          // Update the board
+          newBoard[move.board][move.row][move.col] = move.gamePiece;
+        }
       });
-      
-      console.log(newState.state)
-      
-      if (movesLength && !_.isEqual(newBoard, this._boards)) {
+
+      // Updates this._board if there is change
+      if (!_.isEqual(newBoard, this._boards)) {
         this._boards = newBoard;
-        this.emit('boardChanged', this._boards); 
+        this.emit('boardChanged', this._boards);
       }
-      console.log(this._boards)
     }
+    // checks if there is a turn change
     const isOurTurn = this.whoseTurn?.id === this._townController.ourPlayer.id;
     if (wasOurTurn != isOurTurn) this.emit('turnChanged', isOurTurn);
   }

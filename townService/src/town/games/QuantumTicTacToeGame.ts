@@ -14,6 +14,7 @@ import InvalidParametersError, {
   PLAYER_ALREADY_IN_GAME_MESSAGE,
   PLAYER_NOT_IN_GAME_MESSAGE,
 } from '../../lib/InvalidParametersError';
+import { objectContainsKey } from 'jest-mock-extended';
 
 /**
  * A QuantumTicTacToeGame is a Game that implements the rules of the Tic-Tac-Toe variant described at https://www.smbc-comics.com/comic/tic.
@@ -164,11 +165,10 @@ export default class QuantumTicTacToeGame extends Game<
 
     // A move is valid if the space is empty
     for (const m of targetGame.state.moves) {
-      const isOccupied = m.col === move.move.col && m.row === move.move.row;
-
       // if any prev move have same board and position then current move is not valid
+      const isOccupied = m.col === move.move.col && m.row === move.move.row;
       if (isOccupied) {
-        // if current move is publically visable return to apply move
+        // if current move is publically visable throw Invalid_MOVE_MESSAGE
         if (this.state.publiclyVisible[move.move.board][move.move.row][move.move.col]) {
           throw new InvalidParametersError(INVALID_MOVE_MESSAGE);
         }
@@ -190,20 +190,17 @@ export default class QuantumTicTacToeGame extends Game<
 
   public applyMove(move: GameMove<QuantumTicTacToeMove>): void {
     let isColliding = false;
-    this._validateMove(move);
 
-    console.log('--- APPLYING MOVE ---');
-    console.log('Current state before move:', this.state);
-    console.log('Move to apply:', move.move);
-    console.log('Move to apply:', move.move.gamePiece);
+    // Validate move
+    this._validateMove(move);
 
     // Selects the subgame
     const targetGame = this._games[move.move.board];
 
+    //Loop to check for collision
     for (const m of targetGame.state.moves) {
-      const isOccupied = m.col === move.move.col && m.row === move.move.row;
-
       // if any prev move have same board and position then current move is not valid
+      const isOccupied = m.col === move.move.col && m.row === move.move.row;
       if (isOccupied) {
         // if current move is not yet publically visable
         if (!this.state.publiclyVisible[move.move.board][move.move.row][move.move.col]) {
@@ -212,22 +209,17 @@ export default class QuantumTicTacToeGame extends Game<
 
           this._moveCount++;
 
-          // Add the move to the array of moves in state
+          // Appends the move to the array of moves in state
           this.state = {
             ...this.state,
-            moves: [
-              ...this.state.moves,
-              { board: move.move.board, row: -1, col: -1, gamePiece: m.gamePiece },
-            ],
+            moves: [...this.state.moves, move.move],
           };
 
-          console.log('collision detected adding this move to qTTT state: ', this.state.moves);
-
-          // Use applymove in subgame with colliding piece so private board updates
+          // Use applymove in subgame with 3 blanks to take turn
           this._applyMoveWithBlanks(targetGame, {
             playerID: move.playerID,
-            gameID: targetGame.id, // Use the sub-game's ID
-            move: { row: m.row, col: m.col, board: move.move.board, gamePiece: m.gamePiece },
+            gameID: targetGame.id,
+            move: { row: -1, col: -1, board: move.move.board, gamePiece: m.gamePiece },
           });
 
           // sets colliding flag
@@ -239,7 +231,6 @@ export default class QuantumTicTacToeGame extends Game<
     }
 
     if (!isColliding) {
-      console.log('I got to applymove in subgame');
       this.state = {
         ...this.state,
         moves: [...this.state.moves, move.move],
@@ -247,36 +238,32 @@ export default class QuantumTicTacToeGame extends Game<
 
       this._applyMoveWithBlanks(targetGame, move);
       this._moveCount++;
-
-      console.log(this._games.A.state.moves);
-      console.log(targetGame.state);
     }
-
-    console.log('--- Done MOVE ---');
-    console.log('Current state after move:', this.state);
 
     this._checkForWins();
     this._checkForGameEnding();
   }
 
+  /**
+   * Applies move to targetgame and adds 2 blank moves to other games for turn management
+   */
   private _applyMoveWithBlanks(targetGame: TicTacToeGame, move: GameMove<QuantumTicTacToeMove>) {
+    // For each subgame
     Object.values(this._games).forEach(game => {
-      console.log(game.id);
-      console.log(targetGame.id);
       if (game.id === targetGame.id) {
+        // Applies real move
         game._applyMove({
           row: move.move.row,
           col: move.move.col,
           gamePiece: move.move.gamePiece,
         });
-        console.log('Applied move to subgame: ', move);
+        // Applies blanks 
       } else {
         game.applyMove({
           playerID: move.playerID,
-          gameID: game.id, // Use the sub-game's ID
+          gameID: game.id,
           move: { row: -1, col: -1, gamePiece: move.move.gamePiece },
         });
-        console.log('Applied blank to subgame: ', game.state);
       }
     });
   }
