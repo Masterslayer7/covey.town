@@ -7,7 +7,6 @@ import Game from './Game';
 import TicTacToeGame from './TicTacToeGame';
 import Player from '../../lib/Player';
 import InvalidParametersError, {
-  BOARD_POSITION_NOT_EMPTY_MESSAGE,
   GAME_FULL_MESSAGE,
   GAME_NOT_IN_PROGRESS_MESSAGE,
   INVALID_MOVE_MESSAGE,
@@ -27,11 +26,11 @@ export default class QuantumTicTacToeGame extends Game<
 > {
   private _games: { A: TicTacToeGame; B: TicTacToeGame; C: TicTacToeGame };
 
-  private _xScore: number = 0;
+  private _xScore = 0;
 
-  private _oScore: number = 0;
+  private _oScore = 0;
 
-  private _moveCount: number = 0;
+  private _moveCount = 0;
 
   public constructor() {
     // TODO: implement me
@@ -77,19 +76,19 @@ export default class QuantumTicTacToeGame extends Game<
         x: player.id,
       };
 
-      //joins player 1 to TicTacToe subgames
+      // joins player 1 to TicTacToe subgames
       Object.values(this._games).forEach(game => {
         game.join(player);
       });
 
-      //else updates o with player id
+      // else updates o with player id
     } else if (!this.state.o) {
       this.state = {
         ...this.state,
         o: player.id,
       };
 
-      //joins player 2 to TicTacToe subgames
+      // joins player 2 to TicTacToe subgames
       Object.values(this._games).forEach(game => {
         game.join(player);
       });
@@ -97,7 +96,7 @@ export default class QuantumTicTacToeGame extends Game<
       throw new InvalidParametersError(GAME_FULL_MESSAGE);
     }
 
-    //Updates status to in progress
+    // Updates status to in progress
     if (this.state.x && this.state.o) {
       this.state = {
         ...this.state,
@@ -138,7 +137,7 @@ export default class QuantumTicTacToeGame extends Game<
       return;
     }
 
-    //Incase someone leaves remaining player wins
+    // Incase someone leaves remaining player wins
     if (this.state.x === player.id) {
       this.state = {
         ...this.state,
@@ -160,16 +159,16 @@ export default class QuantumTicTacToeGame extends Game<
    * @see TicTacToeGame#_validateMove
    */
   private _validateMove(move: GameMove<QuantumTicTacToeMove>): void {
-    //Selects the subgame
+    // Selects the subgame
     const targetGame = this._games[move.move.board];
 
     // A move is valid if the space is empty
     for (const m of targetGame.state.moves) {
       const isOccupied = m.col === move.move.col && m.row === move.move.row;
 
-      //if any prev move have same board and position then current move is not valid
+      // if any prev move have same board and position then current move is not valid
       if (isOccupied) {
-        //if current move is publically visable return to apply move
+        // if current move is publically visable return to apply move
         if (this.state.publiclyVisible[move.move.board][move.move.row][move.move.col]) {
           throw new InvalidParametersError(INVALID_MOVE_MESSAGE);
         }
@@ -190,40 +189,55 @@ export default class QuantumTicTacToeGame extends Game<
   }
 
   public applyMove(move: GameMove<QuantumTicTacToeMove>): void {
+    let isColliding = false;
     this._validateMove(move);
 
-    //Selects the subgame
+    console.log('--- APPLYING MOVE ---');
+    console.log('Current state before move:', this.state);
+    console.log('Move to apply:', move);
+
+    // Selects the subgame
     const targetGame = this._games[move.move.board];
 
     for (const m of targetGame.state.moves) {
       const isOccupied = m.col === move.move.col && m.row === move.move.row;
 
-      //if any prev move have same board and position then current move is not valid
+      // if any prev move have same board and position then current move is not valid
       if (isOccupied) {
-        //if current move is not yet publically visable
+        // if current move is not yet publically visable
         if (!this.state.publiclyVisible[move.move.board][move.move.row][move.move.col]) {
-          //Update publically visable to True
+          // Update publically visable to True
           this.state.publiclyVisible[move.move.board][move.move.row][move.move.col] = true;
 
           this._moveCount++;
 
-          //Add the move to the array of moves in state
+          // Add the move to the array of moves in state
           this.state = {
             ...this.state,
             moves: [...this.state.moves, move.move],
           };
 
-          //Use applymove in subgame with colliding piece so private board updates
+          // Use applymove in subgame with colliding piece so private board updates
           targetGame.applyMove({
             playerID: move.playerID,
             gameID: targetGame.id, // Use the sub-game's ID
             move: m,
           });
+
+          // sets colliding flag
+          isColliding = true;
+
+          break;
         }
       }
     }
 
-    targetGame.applyMove(move);
+    if (!isColliding) {
+      targetGame.applyMove(move);
+    }
+
+    console.log('--- Done MOVE ---');
+    console.log('Current state after move:', this.state);
 
     this._checkForWins();
     this._checkForGameEnding();
@@ -235,10 +249,10 @@ export default class QuantumTicTacToeGame extends Game<
    */
   private _checkForWins(): void {
     Object.values(this._games).forEach(game => {
-      if (game.state.status == 'OVER') {
-        if (game.state.winner == this.state.x) {
+      if (game.state.status === 'OVER') {
+        if (game.state.winner === this.state.x) {
           this._xScore++;
-        } else if (game.state.winner == this.state.o) {
+        } else if (game.state.winner === this.state.o) {
           this._oScore++;
         }
       }
@@ -251,9 +265,9 @@ export default class QuantumTicTacToeGame extends Game<
    */
   private _checkForGameEnding(): void {
     // TODO: implement me
-    var isOver = true;
+    let isOver = true;
     Object.values(this._games).forEach(game => {
-      if (game.state.status != 'OVER') {
+      if (game.state.status !== 'OVER') {
         isOver = false;
       }
     });
@@ -262,9 +276,8 @@ export default class QuantumTicTacToeGame extends Game<
       this.state = {
         ...this.state,
         status: 'OVER',
-        winner: this.state.winner = this._oScore > this._xScore ? this.state.o : this.state.x
+        winner: (this.state.winner = this._oScore > this._xScore ? this.state.o : this.state.x),
       };
-      
     }
   }
 }
