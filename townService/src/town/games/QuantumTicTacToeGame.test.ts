@@ -97,5 +97,19 @@ describe('QuantumTicTacToeGame', () => {
         expect(game.state.oScore).toBe(0);
       });
     });
+
+    describe('collision', () => {
+      it('should award a point when a player gets three-in-a-row', () => {
+        // X gets a win on board A
+        makeMove(player1, 'A', 0, 0); // X
+        makeMove(player2, 'A', 0, 0); // O -> colliison
+        makeMove(player1, 'A', 0, 1); // X
+        makeMove(player2, 'B', 0, 1); // O
+        makeMove(player1, 'A', 0, 2); // X 
+
+        expect(game.state.xScore).toBe(1);
+        expect(game.state.oScore).toBe(0);
+      });
+    });
   });
 });

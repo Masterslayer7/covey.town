@@ -128,19 +128,34 @@ export default class QuantumTicTacToeAreaController extends GameAreaController<
     // TODO: implement the rest of this
     const wasOurTurn = this.whoseTurn?.id === this._townController.ourPlayer.id;
     const newState = newModel.game;
+    const movesLength = newState?.state.moves.length;
     if (newState) {
-      const newBoard: TicTacToeCell[][] = [
+      const newBoard: { A: TicTacToeCell[][]; B: TicTacToeCell[][]; C: TicTacToeCell[][] } = 
+      { A: [
         [undefined, undefined, undefined],
         [undefined, undefined, undefined],
         [undefined, undefined, undefined],
-      ];
+      ],
+    B: [
+        [undefined, undefined, undefined],
+        [undefined, undefined, undefined],
+        [undefined, undefined, undefined],
+      ],C: [
+        [undefined, undefined, undefined],
+        [undefined, undefined, undefined],
+        [undefined, undefined, undefined],
+      ]};
       newState.state.moves.forEach(move => {
-        newBoard[move.row][move.col] = move.gamePiece;
+        newBoard[move.board][move.row][move.col] = move.gamePiece;
       });
-      if (!_.isEqual(newBoard, this._boards[newState.state.moves[-1].board])) {
-        this._boards[newState.state.moves[-1].board] = newBoard;
-        this.emit('boardChanged', this._boards);
+      
+      console.log(newState.state)
+      
+      if (movesLength && !_.isEqual(newBoard, this._boards)) {
+        this._boards = newBoard;
+        this.emit('boardChanged', this._boards); 
       }
+      console.log(this._boards)
     }
     const isOurTurn = this.whoseTurn?.id === this._townController.ourPlayer.id;
     if (wasOurTurn != isOurTurn) this.emit('turnChanged', isOurTurn);

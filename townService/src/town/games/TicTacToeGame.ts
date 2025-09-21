@@ -107,7 +107,7 @@ export default class TicTacToeGame extends Game<TicTacToeGameState, TicTacToeMov
     }
   }
 
-  private _applyMove(move: TicTacToeMove): void {
+  public _applyMove(move: TicTacToeMove): void {
     this.state = {
       ...this.state,
       moves: [...this.state.moves, move],

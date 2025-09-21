@@ -215,8 +215,13 @@ export default class QuantumTicTacToeGame extends Game<
           // Add the move to the array of moves in state
           this.state = {
             ...this.state,
-            moves: [...this.state.moves, move.move],
+            moves: [
+              ...this.state.moves,
+              { board: move.move.board, row: -1, col: -1, gamePiece: m.gamePiece },
+            ],
           };
+
+          console.log('collision detected adding this move to qTTT state: ', this.state.moves);
 
           // Use applymove in subgame with colliding piece so private board updates
           this._applyMoveWithBlanks(targetGame, {
@@ -259,8 +264,12 @@ export default class QuantumTicTacToeGame extends Game<
       console.log(game.id);
       console.log(targetGame.id);
       if (game.id === targetGame.id) {
+        game._applyMove({
+          row: move.move.row,
+          col: move.move.col,
+          gamePiece: move.move.gamePiece,
+        });
         console.log('Applied move to subgame: ', move);
-        game.applyMove(move);
       } else {
         game.applyMove({
           playerID: move.playerID,
