@@ -14,6 +14,7 @@ import InvalidParametersError, {
   PLAYER_ALREADY_IN_GAME_MESSAGE,
   PLAYER_NOT_IN_GAME_MESSAGE,
 } from '../../lib/InvalidParametersError';
+import e from 'express';
 
 /**
  * A QuantumTicTacToeGame is a Game that implements the rules of the Tic-Tac-Toe variant described at https://www.smbc-comics.com/comic/tic.
@@ -137,22 +138,48 @@ export default class QuantumTicTacToeGame extends Game<
       return;
     }
 
-    // Incase someone leaves remaining player wins
-    if (this.state.x === player.id) {
-      this.state = {
-        ...this.state,
-        status: 'OVER',
-        winner: this.state.o,
-      };
-    } else {
-      this.state = {
-        ...this.state,
-        status: 'OVER',
-        winner: this.state.x,
-      };
+    // Incase someone leaves a game in progress, remaining player wins
+    if (this.state.status === 'IN_PROGRESS') {
+      if (this.state.x === player.id) {
+        this.state = {
+          ...this.state,
+          status: 'OVER',
+          winner: this.state.o,
+          x: undefined
+        };
+      } else {
+        this.state = {
+          ...this.state,
+          status: 'OVER',
+          winner: this.state.x,
+          o: undefined
+        };
+      }
+    }
+    // In case someone leaves while game is waiting for players sets x and o to undefined
+    else if (this.state.status === 'WAITING_TO_START') {
+      if (this.state.x === player.id) {
+        if (this.state.o === undefined){
+          this.state = {
+            ...this.state,
+            status: 'WAITING_TO_START',
+            x: undefined
+          };
+        }
+        else{
+          this.state = {
+            ...this.state,
+            x: this.state.o
+          };
+        }
+      } else {
+        this.state = {
+          ...this.state,
+          o: undefined
+        };
+      }
     }
   }
-
   /**
    * Checks that the given move is "valid": that the it's the right
    * player's turn, that the game is actually in-progress, etc.
