@@ -178,7 +178,8 @@ export default class QuantumTicTacToeGame extends Game<
     // A move is only valid if it is the player's turn
     if (move.move.gamePiece === 'X' && this._moveCount % 2 === 1) {
       throw new InvalidParametersError(MOVE_NOT_YOUR_TURN_MESSAGE);
-    } else if (move.move.gamePiece === 'O' && this.state.moves.length % 2 === 0) {
+    } else if (move.move.gamePiece === 'O' && this._moveCount % 2 === 0) {
+      console.log(this._moveCount);
       throw new InvalidParametersError(MOVE_NOT_YOUR_TURN_MESSAGE);
     }
 
@@ -190,6 +191,8 @@ export default class QuantumTicTacToeGame extends Game<
 
   public applyMove(move: GameMove<QuantumTicTacToeMove>): void {
     let isColliding = false;
+
+    console.log('incoming move: ', move);
 
     // Validate move
     this._validateMove(move);
@@ -236,9 +239,19 @@ export default class QuantumTicTacToeGame extends Game<
         moves: [...this.state.moves, move.move],
       };
 
-      this._applyMoveWithBlanks(targetGame, move);
       this._moveCount++;
+      this._applyMoveWithBlanks(targetGame, move);
     }
+
+    console.log('applied this move: ', move);
+    console.log('current state:', this.state);
+    console.log('current movecount: ', this._moveCount);
+
+    Object.values(this._games).forEach(game => {
+      console.log('---------SUBGAME STATES -----------');
+      console.log(game.state.moves);
+      console.log(game.state);
+    });
 
     this._checkForWins();
     this._checkForGameEnding();
@@ -250,20 +263,22 @@ export default class QuantumTicTacToeGame extends Game<
   private _applyMoveWithBlanks(targetGame: TicTacToeGame, move: GameMove<QuantumTicTacToeMove>) {
     // For each subgame
     Object.values(this._games).forEach(game => {
-      if (game.id === targetGame.id) {
-        // Applies real move
-        game._applyMove({
-          row: move.move.row,
-          col: move.move.col,
-          gamePiece: move.move.gamePiece,
-        });
-        // Applies blanks 
-      } else {
-        game.applyMove({
-          playerID: move.playerID,
-          gameID: game.id,
-          move: { row: -1, col: -1, gamePiece: move.move.gamePiece },
-        });
+      if (game.state.status === 'IN_PROGRESS') {
+        if (game.id === targetGame.id) {
+          // Applies real move
+          game._applyMove({
+            row: move.move.row,
+            col: move.move.col,
+            gamePiece: move.move.gamePiece,
+          });
+          // Applies blanks
+        } else {
+          game.applyMove({
+            playerID: move.playerID,
+            gameID: game.id,
+            move: { row: -1, col: -1, gamePiece: move.move.gamePiece },
+          });
+        }
       }
     });
   }
@@ -273,15 +288,24 @@ export default class QuantumTicTacToeGame extends Game<
    * Awards points and marks boards as "won" so they can't be played on.
    */
   private _checkForWins(): void {
+    let _xScore = 0;
+    let _oScore = 0;
+
     Object.values(this._games).forEach(game => {
       if (game.state.status === 'OVER') {
         if (game.state.winner === this.state.x) {
-          this.state.xScore++;
+          _xScore++;
         } else if (game.state.winner === this.state.o) {
-          this.state.oScore++;
+          _oScore++;
         }
       }
     });
+
+    this.state = {
+      ...this.state,
+      xScore: _xScore,
+      oScore: _oScore,
+    };
   }
 
   /**
@@ -289,7 +313,6 @@ export default class QuantumTicTacToeGame extends Game<
    * This happens when all squares on all boards are either occupied or part of a won board.
    */
   private _checkForGameEnding(): void {
-    // TODO: implement me
     let isOver = true;
     Object.values(this._games).forEach(game => {
       if (game.state.status !== 'OVER') {
@@ -297,12 +320,23 @@ export default class QuantumTicTacToeGame extends Game<
       }
     });
 
+    if(this.state.xScore > this.state.oScore){
+      this.state.winner = this.state.x;
+    } 
+    else if(this.state.xScore < this.state.oScore){
+      this.state.winner = this.state.o;
+    }
+    else{
+      this.state.winner = undefined;
+    }
+
     if (isOver) {
       this.state = {
         ...this.state,
         status: 'OVER',
-        winner: (this.state.winner = this._oScore > this._xScore ? this.state.o : this.state.x),
+        winner: this.state.winner,
       };
+      
     }
   }
 }

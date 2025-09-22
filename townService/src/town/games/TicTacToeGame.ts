@@ -22,6 +22,8 @@ export default class TicTacToeGame extends Game<TicTacToeGameState, TicTacToeMov
     });
   }
 
+  private _moveCount = 0;
+
   private get _board() {
     const { moves } = this.state;
     const board = [
@@ -78,7 +80,7 @@ export default class TicTacToeGame extends Game<TicTacToeGameState, TicTacToeMov
       return;
     }
     // Check for no more moves
-    if (this.state.moves.length === 9) {
+    if (this._moveCount === 9) {
       this.state = {
         ...this.state,
         status: 'OVER',
@@ -112,6 +114,9 @@ export default class TicTacToeGame extends Game<TicTacToeGameState, TicTacToeMov
       ...this.state,
       moves: [...this.state.moves, move],
     };
+    if (move.col !== -1 || move.row !== -1){
+      this._moveCount++;
+    }
     this._checkForGameEnding();
   }
 

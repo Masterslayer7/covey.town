@@ -105,10 +105,61 @@ describe('QuantumTicTacToeGame', () => {
         makeMove(player2, 'A', 0, 0); // O -> colliison
         makeMove(player1, 'A', 0, 1); // X
         makeMove(player2, 'B', 0, 1); // O
-        makeMove(player1, 'A', 0, 2); // X 
+        makeMove(player1, 'A', 0, 2); // X
 
         expect(game.state.xScore).toBe(1);
         expect(game.state.oScore).toBe(0);
+      });
+    });
+
+    describe('a full game simulation', () => {
+      it('should correctly handle moves, collisions, scoring, and determine a winner', () => {
+
+        makeMove(player1, 'A', 0, 0); // X places on A[0,0]
+        makeMove(player2, 'A', 0, 0); // O collides on A[0,0]. Square becomes public. X's turn is skipped.
+
+        // Assert that the collision was handled correctly
+        expect(game.state.publiclyVisible.A[0][0]).toBe(true);
+        // @ts-expect-error - private property access for testing
+        expect(game._games.A.state.moves.length).toBe(2); // Only X's move and blank for collision
+        // @ts-expect-error - private property access for testing
+        expect(game._moveCount).toBe(2); // O's turn was skipped, so moveCount is 2
+
+        // Phase 2: Players score points
+        // ---------------------------------------------
+        makeMove(player1, 'A', 1, 1); // X
+        makeMove(player2, 'B', 0, 0); // O
+        makeMove(player1, 'A', 2, 2); // X completes a diagonal on A and scores
+
+        // Assert X's score is now 1
+        expect(game.state.xScore).toBe(1);
+        expect(game.state.oScore).toBe(0);
+
+        makeMove(player2, 'B', 1, 1); // O
+        makeMove(player1, 'C', 0, 0); // X
+        makeMove(player2, 'B', 2, 2); // O completes a diagonal on B and scores
+
+        // Assert scores are now tied 1-1
+        expect(game.state.xScore).toBe(1);
+        expect(game.state.oScore).toBe(1);
+
+
+        // // Player X tries to play on the now-public A[0,0] again
+        // expect(() => {
+        //   makeMove(player1, 'A', 0, 0);
+        // }).toThrow(InvalidParametersError); // The move is invalid
+
+        makeMove(player1, 'C', 1, 1); // X
+        makeMove(player2, 'C', 0, 1); // o
+        makeMove(player1, 'C', 2, 2); // X
+
+
+        // Final Assertions
+        // ---------------------------------------------
+        expect(game.state.status).toBe('OVER');
+        expect(game.state.winner).toBe(player1.id);
+        expect(game.state.xScore).toBe(2);
+        expect(game.state.oScore).toBe(1);
       });
     });
   });
