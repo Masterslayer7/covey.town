@@ -49,6 +49,7 @@
         "townService/src/town/games/QuantumTicTacToeGame.test.ts",
         "townService/src/town/games/QuantumTicTacToeGame.ts",
         "townService/src/town/games/QuantumTicTacToeGameArea.ts",
-        "townService/src/town/games/TicTacToeGame.ts"
+        "townService/src/town/games/TicTacToeGame.ts",
+        "shared/types/CoveyTownSocket.d.ts"
     ]
 }

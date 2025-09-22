@@ -14,7 +14,6 @@ import {
 } from '../../types/CoveyTownSocket';
 import GameArea from './GameArea';
 import QuantumTicTacToeGame from './QuantumTicTacToeGame';
-import TicTacToeGame from './TicTacToeGame';
 
 /**
  * A QuantumTicTacToeGameArea is a GameArea that hosts a QuantumTicTacToeGame.

@@ -154,19 +154,18 @@ export default class QuantumTicTacToeAreaController extends GameAreaController<
             newBoard[move.board][move.row][move.col] === undefined &&
             newState.state.publiclyVisible[move.board][move.row][move.col]
           ) {
-            console.log("yes collision my id is ", this.gamePiece);
-            console.log("i output: ", (this.gamePiece === 'X' ? 'O' : 'X'));
-            newBoard[move.board][move.row][move.col] = (this.gamePiece === 'X' ? 'O' : 'X');
+            console.log('yes collision my id is ', this.gamePiece);
+            console.log('i output: ', this.gamePiece === 'X' ? 'O' : 'X');
+            newBoard[move.board][move.row][move.col] = this.gamePiece === 'X' ? 'O' : 'X';
           }
         }
         // If its my move
         else {
           // Update the board
-          console.log("No collision my id is ", this.gamePiece);
-          if(newBoard[move.board][move.row][move.col] === undefined){
+          console.log('No collision my id is ', this.gamePiece);
+          if (newBoard[move.board][move.row][move.col] === undefined) {
             newBoard[move.board][move.row][move.col] = move.gamePiece;
           }
-          
         }
       });
 

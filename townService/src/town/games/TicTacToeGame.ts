@@ -114,7 +114,7 @@ export default class TicTacToeGame extends Game<TicTacToeGameState, TicTacToeMov
       ...this.state,
       moves: [...this.state.moves, move],
     };
-    if (move.col !== -1 || move.row !== -1){
+    if (move.col !== -1 || move.row !== -1) {
       this._moveCount++;
     }
     this._checkForGameEnding();

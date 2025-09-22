@@ -9,12 +9,12 @@ import Player from '../../lib/Player';
 import InvalidParametersError, {
   GAME_FULL_MESSAGE,
   GAME_NOT_IN_PROGRESS_MESSAGE,
+  GAME_OVER_MESSAGE,
   INVALID_MOVE_MESSAGE,
   MOVE_NOT_YOUR_TURN_MESSAGE,
   PLAYER_ALREADY_IN_GAME_MESSAGE,
   PLAYER_NOT_IN_GAME_MESSAGE,
 } from '../../lib/InvalidParametersError';
-import { objectContainsKey } from 'jest-mock-extended';
 
 /**
  * A QuantumTicTacToeGame is a Game that implements the rules of the Tic-Tac-Toe variant described at https://www.smbc-comics.com/comic/tic.
@@ -163,6 +163,10 @@ export default class QuantumTicTacToeGame extends Game<
     // Selects the subgame
     const targetGame = this._games[move.move.board];
 
+    if(this._games[move.move.board].state.status === "OVER"){
+      throw new InvalidParametersError(INVALID_MOVE_MESSAGE);
+    }
+
     // A move is valid if the space is empty
     for (const m of targetGame.state.moves) {
       // if any prev move have same board and position then current move is not valid
@@ -172,6 +176,9 @@ export default class QuantumTicTacToeGame extends Game<
         if (this.state.publiclyVisible[move.move.board][move.move.row][move.move.col]) {
           throw new InvalidParametersError(INVALID_MOVE_MESSAGE);
         }
+        else if(m.gamePiece === move.move.gamePiece){
+          throw new InvalidParametersError(INVALID_MOVE_MESSAGE);
+        }
       }
     }
 
@@ -179,7 +186,6 @@ export default class QuantumTicTacToeGame extends Game<
     if (move.move.gamePiece === 'X' && this._moveCount % 2 === 1) {
       throw new InvalidParametersError(MOVE_NOT_YOUR_TURN_MESSAGE);
     } else if (move.move.gamePiece === 'O' && this._moveCount % 2 === 0) {
-      console.log(this._moveCount);
       throw new InvalidParametersError(MOVE_NOT_YOUR_TURN_MESSAGE);
     }
 
@@ -192,15 +198,13 @@ export default class QuantumTicTacToeGame extends Game<
   public applyMove(move: GameMove<QuantumTicTacToeMove>): void {
     let isColliding = false;
 
-    console.log('incoming move: ', move);
-
     // Validate move
     this._validateMove(move);
 
     // Selects the subgame
     const targetGame = this._games[move.move.board];
 
-    //Loop to check for collision
+    // Loop to check for collision
     for (const m of targetGame.state.moves) {
       // if any prev move have same board and position then current move is not valid
       const isOccupied = m.col === move.move.col && m.row === move.move.row;
@@ -243,16 +247,6 @@ export default class QuantumTicTacToeGame extends Game<
       this._applyMoveWithBlanks(targetGame, move);
     }
 
-    console.log('applied this move: ', move);
-    console.log('current state:', this.state);
-    console.log('current movecount: ', this._moveCount);
-
-    Object.values(this._games).forEach(game => {
-      console.log('---------SUBGAME STATES -----------');
-      console.log(game.state.moves);
-      console.log(game.state);
-    });
-
     this._checkForWins();
     this._checkForGameEnding();
   }
@@ -288,23 +282,23 @@ export default class QuantumTicTacToeGame extends Game<
    * Awards points and marks boards as "won" so they can't be played on.
    */
   private _checkForWins(): void {
-    let _xScore = 0;
-    let _oScore = 0;
+    let localXScore = 0;
+    let localOScore = 0;
 
     Object.values(this._games).forEach(game => {
       if (game.state.status === 'OVER') {
         if (game.state.winner === this.state.x) {
-          _xScore++;
+          localXScore++;
         } else if (game.state.winner === this.state.o) {
-          _oScore++;
+          localOScore++;
         }
       }
     });
 
     this.state = {
       ...this.state,
-      xScore: _xScore,
-      oScore: _oScore,
+      xScore: localXScore,
+      oScore: localOScore,
     };
   }
 
@@ -320,13 +314,11 @@ export default class QuantumTicTacToeGame extends Game<
       }
     });
 
-    if(this.state.xScore > this.state.oScore){
+    if (this.state.xScore > this.state.oScore) {
       this.state.winner = this.state.x;
-    } 
-    else if(this.state.xScore < this.state.oScore){
+    } else if (this.state.xScore < this.state.oScore) {
       this.state.winner = this.state.o;
-    }
-    else{
+    } else {
       this.state.winner = undefined;
     }
 
@@ -336,7 +328,6 @@ export default class QuantumTicTacToeGame extends Game<
         status: 'OVER',
         winner: this.state.winner,
       };
-      
     }
   }
 }

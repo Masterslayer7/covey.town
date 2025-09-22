@@ -1,5 +1,5 @@
 import { createPlayerForTesting } from '../../TestUtils';
-import InvalidParametersError from '../../lib/InvalidParametersError';
+import InvalidParametersError, { BOARD_POSITION_NOT_EMPTY_MESSAGE, GAME_NOT_IN_PROGRESS_MESSAGE, MOVE_NOT_YOUR_TURN_MESSAGE, PLAYER_NOT_IN_GAME_MESSAGE } from '../../lib/InvalidParametersError';
 import Player from '../../lib/Player';
 import { GameMove, QuantumTicTacToeMove } from '../../types/CoveyTownSocket';
 import QuantumTicTacToeGame from './QuantumTicTacToeGame';
@@ -53,15 +53,37 @@ describe('QuantumTicTacToeGame', () => {
         game.join(player2);
       });
 
-      it('should set the game to OVER and declare the other player the winner', () => {
+      it('should set the game to OVER and declare the O player the winner', () => {
         game.leave(player1);
         expect(game.state.status).toBe('OVER');
         expect(game.state.winner).toBe(player2.id);
       });
+
+      it('should set the game to OVER and declare the X player the winner', () => {
+        game.leave(player2);
+        expect(game.state.status).toBe('OVER');
+        expect(game.state.winner).toBe(player1.id);
+      });
+    });
+    describe('when the player is in the game', () => {
+      it('when the game is not in progress, it should set the game status to WAITING_TO_START and remove the player', () => {
+        game.join(player1);
+        expect(game.state.x).toEqual(player1.id);
+        expect(game.state.o).toBeUndefined();
+        expect(game.state.status).toEqual('WAITING_TO_START');
+        expect(game.state.winner).toBeUndefined();
+        game.leave(player1);
+        expect(game.state.x).toBeUndefined();
+        expect(game.state.o).toBeUndefined();
+        expect(game.state.status).toEqual('WAITING_TO_START');
+        expect(game.state.winner).toBeUndefined();
+      });
     });
   });
 
+
   describe('applyMove', () => {
+    
     beforeEach(() => {
       game.join(player1);
       game.join(player2);
@@ -83,6 +105,16 @@ describe('QuantumTicTacToeGame', () => {
       expect(game._games.A._board[0][0]).toBe('X');
       expect(game.state.moves.length).toBe(1);
     });
+
+    describe(' when given an invalid move', () => {
+      it('should throw an error if the game is not in progress', () => {
+        game.leave(player2);
+        expect(() =>
+          makeMove(player1, 'A', 0, 2),
+        ).toThrowError(GAME_NOT_IN_PROGRESS_MESSAGE);
+      });
+    });
+    
 
     describe('scoring and game end', () => {
       it('should award a point when a player gets three-in-a-row', () => {
@@ -114,7 +146,6 @@ describe('QuantumTicTacToeGame', () => {
 
     describe('a full game simulation', () => {
       it('should correctly handle moves, collisions, scoring, and determine a winner', () => {
-
         makeMove(player1, 'A', 0, 0); // X places on A[0,0]
         makeMove(player2, 'A', 0, 0); // O collides on A[0,0]. Square becomes public. X's turn is skipped.
 
@@ -143,7 +174,6 @@ describe('QuantumTicTacToeGame', () => {
         expect(game.state.xScore).toBe(1);
         expect(game.state.oScore).toBe(1);
 
-
         // // Player X tries to play on the now-public A[0,0] again
         // expect(() => {
         //   makeMove(player1, 'A', 0, 0);
@@ -152,7 +182,6 @@ describe('QuantumTicTacToeGame', () => {
         makeMove(player1, 'C', 1, 1); // X
         makeMove(player2, 'C', 0, 1); // o
         makeMove(player1, 'C', 2, 2); // X
-
 
         // Final Assertions
         // ---------------------------------------------
