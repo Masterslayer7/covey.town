@@ -14,7 +14,6 @@ import InvalidParametersError, {
   PLAYER_ALREADY_IN_GAME_MESSAGE,
   PLAYER_NOT_IN_GAME_MESSAGE,
 } from '../../lib/InvalidParametersError';
-import e from 'express';
 
 /**
  * A QuantumTicTacToeGame is a Game that implements the rules of the Tic-Tac-Toe variant described at https://www.smbc-comics.com/comic/tic.
@@ -110,33 +109,6 @@ export default class QuantumTicTacToeGame extends Game<
     if (this.state.x !== player.id && this.state.o !== player.id) {
       throw new InvalidParametersError(PLAYER_NOT_IN_GAME_MESSAGE);
     }
-    // Handles case where the game has not started yet by checking if x or o player are undefined (default)
-    if (this.state.o === undefined) {
-      this.state = {
-        moves: [],
-        status: 'WAITING_TO_START',
-        xScore: 0,
-        oScore: 0,
-        publiclyVisible: {
-          A: [
-            [false, false, false],
-            [false, false, false],
-            [false, false, false],
-          ],
-          B: [
-            [false, false, false],
-            [false, false, false],
-            [false, false, false],
-          ],
-          C: [
-            [false, false, false],
-            [false, false, false],
-            [false, false, false],
-          ],
-        },
-      };
-      return;
-    }
 
     // Incase someone leaves a game in progress, remaining player wins
     if (this.state.status === 'IN_PROGRESS') {
@@ -145,41 +117,72 @@ export default class QuantumTicTacToeGame extends Game<
           ...this.state,
           status: 'OVER',
           winner: this.state.o,
-          x: undefined
+          x: undefined,
         };
       } else {
         this.state = {
           ...this.state,
           status: 'OVER',
           winner: this.state.x,
-          o: undefined
+          o: undefined,
         };
       }
+      // removes player from sub games
+      Object.values(this._games).forEach(game => {
+        game.leave(player);
+      });
     }
     // In case someone leaves while game is waiting for players sets x and o to undefined
     else if (this.state.status === 'WAITING_TO_START') {
       if (this.state.x === player.id) {
-        if (this.state.o === undefined){
+        if (this.state.o === undefined) {
           this.state = {
             ...this.state,
+            moves: [],
             status: 'WAITING_TO_START',
-            x: undefined
+            xScore: 0,
+            oScore: 0,
+            publiclyVisible: {
+              A: [
+                [false, false, false],
+                [false, false, false],
+                [false, false, false],
+              ],
+              B: [
+                [false, false, false],
+                [false, false, false],
+                [false, false, false],
+              ],
+              C: [
+                [false, false, false],
+                [false, false, false],
+                [false, false, false],
+              ],
+            },
+            x: undefined,
+            o: undefined,
           };
-        }
-        else{
+        } else {
           this.state = {
             ...this.state,
-            x: this.state.o
+            x: this.state.o,
           };
         }
+        Object.values(this._games).forEach(game => {
+          game.leave(player);
+        });
       } else {
         this.state = {
           ...this.state,
-          o: undefined
+          o: undefined,
         };
+        Object.values(this._games).forEach(game => {
+          game.leave(player);
+        });
       }
     }
   }
+
   /**
    * Checks that the given move is "valid": that the it's the right
    * player's turn, that the game is actually in-progress, etc.
