@@ -192,7 +192,7 @@ export default class QuantumTicTacToeGame extends Game<
     // Selects the subgame
     const targetGame = this._games[move.move.board];
 
-    if (this._games[move.move.board].state.status === 'OVER') {
+    if (targetGame.state.status === 'OVER' && targetGame.state.moves.length !== 0) {
       throw new InvalidParametersError(INVALID_MOVE_MESSAGE);
     }
 
@@ -328,6 +328,9 @@ export default class QuantumTicTacToeGame extends Game<
       xScore: localXScore,
       oScore: localOScore,
     };
+
+    this._xScore = localXScore;
+    this._oScore = localOScore;
   }
 
   /**
