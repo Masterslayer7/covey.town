@@ -1,5 +1,7 @@
 import { createPlayerForTesting } from '../../TestUtils';
-import InvalidParametersError, { BOARD_POSITION_NOT_EMPTY_MESSAGE, GAME_NOT_IN_PROGRESS_MESSAGE, MOVE_NOT_YOUR_TURN_MESSAGE, PLAYER_NOT_IN_GAME_MESSAGE } from '../../lib/InvalidParametersError';
+import InvalidParametersError, {
+  GAME_NOT_IN_PROGRESS_MESSAGE,
+} from '../../lib/InvalidParametersError';
 import Player from '../../lib/Player';
 import { GameMove, QuantumTicTacToeMove } from '../../types/CoveyTownSocket';
 import QuantumTicTacToeGame from './QuantumTicTacToeGame';
@@ -81,9 +83,7 @@ describe('QuantumTicTacToeGame', () => {
     });
   });
 
-
   describe('applyMove', () => {
-    
     beforeEach(() => {
       game.join(player1);
       game.join(player2);
@@ -109,12 +109,9 @@ describe('QuantumTicTacToeGame', () => {
     describe(' when given an invalid move', () => {
       it('should throw an error if the game is not in progress', () => {
         game.leave(player2);
-        expect(() =>
-          makeMove(player1, 'A', 0, 2),
-        ).toThrowError(GAME_NOT_IN_PROGRESS_MESSAGE);
+        expect(() => makeMove(player1, 'A', 0, 2)).toThrowError(GAME_NOT_IN_PROGRESS_MESSAGE);
       });
     });
-    
 
     describe('scoring and game end', () => {
       it('should award a point when a player gets three-in-a-row', () => {

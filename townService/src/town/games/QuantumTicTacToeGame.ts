@@ -9,7 +9,6 @@ import Player from '../../lib/Player';
 import InvalidParametersError, {
   GAME_FULL_MESSAGE,
   GAME_NOT_IN_PROGRESS_MESSAGE,
-  GAME_OVER_MESSAGE,
   INVALID_MOVE_MESSAGE,
   MOVE_NOT_YOUR_TURN_MESSAGE,
   PLAYER_ALREADY_IN_GAME_MESSAGE,
@@ -163,7 +162,7 @@ export default class QuantumTicTacToeGame extends Game<
     // Selects the subgame
     const targetGame = this._games[move.move.board];
 
-    if(this._games[move.move.board].state.status === "OVER"){
+    if (this._games[move.move.board].state.status === 'OVER') {
       throw new InvalidParametersError(INVALID_MOVE_MESSAGE);
     }
 
@@ -175,8 +174,7 @@ export default class QuantumTicTacToeGame extends Game<
         // if current move is publically visable throw Invalid_MOVE_MESSAGE
         if (this.state.publiclyVisible[move.move.board][move.move.row][move.move.col]) {
           throw new InvalidParametersError(INVALID_MOVE_MESSAGE);
-        }
-        else if(m.gamePiece === move.move.gamePiece){
+        } else if (m.gamePiece === move.move.gamePiece) {
           throw new InvalidParametersError(INVALID_MOVE_MESSAGE);
         }
       }
