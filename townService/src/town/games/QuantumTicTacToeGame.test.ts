@@ -1,6 +1,8 @@
 import { createPlayerForTesting } from '../../TestUtils';
 import InvalidParametersError, {
   GAME_NOT_IN_PROGRESS_MESSAGE,
+  INVALID_MOVE_MESSAGE,
+  MOVE_NOT_YOUR_TURN_MESSAGE,
 } from '../../lib/InvalidParametersError';
 import Player from '../../lib/Player';
 import { GameMove, QuantumTicTacToeMove } from '../../types/CoveyTownSocket';
@@ -67,7 +69,7 @@ describe('QuantumTicTacToeGame', () => {
         expect(game.state.winner).toBe(player1.id);
       });
     });
-    describe('when the player is in the game', () => {
+    describe('when one player is in the game', () => {
       it('when the game is not in progress, it should set the game status to WAITING_TO_START and remove the player', () => {
         game.join(player1);
         expect(game.state.x).toEqual(player1.id);
@@ -104,12 +106,68 @@ describe('QuantumTicTacToeGame', () => {
       // @ts-expect-error - private property
       expect(game._games.A._board[0][0]).toBe('X');
       expect(game.state.moves.length).toBe(1);
+      expect(game.state.publiclyVisible.A[0][0]).toBe(false);
     });
 
-    describe(' when given an invalid move', () => {
+    describe('Validate move', () => {
       it('should throw an error if the game is not in progress', () => {
         game.leave(player2);
         expect(() => makeMove(player1, 'A', 0, 2)).toThrowError(GAME_NOT_IN_PROGRESS_MESSAGE);
+      });
+
+      it('should throw invalid move if the board is won', () => {
+        makeMove(player1, 'A', 0, 0); // X
+        makeMove(player2, 'B', 0, 0); // O
+        makeMove(player1, 'A', 0, 1); // X
+        makeMove(player2, 'B', 0, 1); // O
+        makeMove(player1, 'A', 0, 2); // X -> scores 1 point
+
+        expect(() => makeMove(player2, 'A', 0, 2)).toThrowError(INVALID_MOVE_MESSAGE);
+      });
+
+      it('should throw an not your turn error if X goes twice', () => {
+        makeMove(player1, 'A', 0, 0); // X
+        expect(() => makeMove(player1, 'A', 0, 2)).toThrowError(MOVE_NOT_YOUR_TURN_MESSAGE);
+      });
+
+      it('should throw an not your turn error if X goes twice', () => {
+        makeMove(player1, 'A', 0, 0); // X
+        makeMove(player2, 'A', 0, 1); // O
+        expect(() => makeMove(player2, 'A', 0, 2)).toThrowError(MOVE_NOT_YOUR_TURN_MESSAGE);
+      });
+
+      // it('Should throw error if clicking on publiclly visiable piece', () => {
+      //   // X gets a win on board A
+      //   makeMove(player1, 'A', 0, 0); // X
+      //   makeMove(player2, 'A', 0, 0); // O -> colliison
+      //   makeMove(player1, 'B', 0, 0); // X
+
+      //   // Publically visable piece
+      //   expect(() => makeMove(player2, 'A', 0, 0)).toThrowError(INVALID_MOVE_MESSAGE);
+      // });
+      it('Should throw error if clicking on your own piece', () => {
+        // X gets a win on board A
+        makeMove(player1, 'A', 0, 0); // X
+        makeMove(player2, 'A', 0, 0); // O -> colliison
+
+        // Own Piece
+        expect(() => makeMove(player1, 'A', 0, 0)).toThrowError(INVALID_MOVE_MESSAGE);
+      });
+    });
+
+    describe('Collision testing', () => {
+      it('should award a point when a player gets three-in-a-row', () => {
+        // X gets a win on board A
+        makeMove(player1, 'A', 0, 0); // X
+        makeMove(player2, 'A', 0, 0); // O -> colliison
+        makeMove(player1, 'A', 0, 1); // X
+        makeMove(player2, 'B', 0, 1); // O
+        makeMove(player1, 'A', 0, 2); // X
+
+        expect(game.state.publiclyVisible.A[0][0]).toBe(true);
+        expect(game.state.moves.length).toBe(5);
+        expect(game.state.xScore).toBe(1);
+        expect(game.state.oScore).toBe(0);
       });
     });
 
@@ -121,20 +179,6 @@ describe('QuantumTicTacToeGame', () => {
         makeMove(player1, 'A', 0, 1); // X
         makeMove(player2, 'B', 0, 1); // O
         makeMove(player1, 'A', 0, 2); // X -> scores 1 point
-
-        expect(game.state.xScore).toBe(1);
-        expect(game.state.oScore).toBe(0);
-      });
-    });
-
-    describe('collision', () => {
-      it('should award a point when a player gets three-in-a-row', () => {
-        // X gets a win on board A
-        makeMove(player1, 'A', 0, 0); // X
-        makeMove(player2, 'A', 0, 0); // O -> colliison
-        makeMove(player1, 'A', 0, 1); // X
-        makeMove(player2, 'B', 0, 1); // O
-        makeMove(player1, 'A', 0, 2); // X
 
         expect(game.state.xScore).toBe(1);
         expect(game.state.oScore).toBe(0);
@@ -172,6 +216,44 @@ describe('QuantumTicTacToeGame', () => {
         expect(game.state.status).toBe('OVER');
         expect(game.state.winner).toBe(player1.id);
         expect(game.state.xScore).toBe(2);
+        expect(game.state.oScore).toBe(1);
+      });
+
+      it('should correctly handle moves, collisions, scoring, and determine a tie', () => {
+        makeMove(player1, 'A', 0, 0); // X places on A[0,0]
+        makeMove(player2, 'A', 0, 0); // O collides on A[0,0]. Square becomes public. X's turn is skipped.
+
+        // Assert that the collision was handled correctly
+        expect(game.state.publiclyVisible.A[0][0]).toBe(true);
+
+        makeMove(player1, 'A', 1, 1); // X
+        makeMove(player2, 'B', 0, 0); // O
+        makeMove(player1, 'A', 2, 2); // X completes a diagonal on A and scores
+
+        // Assert X's score is now 1
+        expect(game.state.xScore).toBe(1);
+        expect(game.state.oScore).toBe(0);
+
+        makeMove(player2, 'B', 1, 1); // O
+        makeMove(player1, 'C', 0, 0); // X
+        makeMove(player2, 'B', 2, 2); // O completes a diagonal on B and scores
+
+        // Assert scores are now tied 1-1
+        expect(game.state.xScore).toBe(1);
+        expect(game.state.oScore).toBe(1);
+
+        makeMove(player1, 'C', 1, 1); // X
+        makeMove(player2, 'C', 0, 1); // o
+        makeMove(player1, 'C', 2, 1); // X
+        makeMove(player2, 'C', 2, 0); // O
+        makeMove(player1, 'C', 0, 2); // X
+        makeMove(player2, 'C', 2, 2); // O
+        makeMove(player1, 'C', 1, 2); // X
+        makeMove(player2, 'C', 1, 0); // O
+
+        expect(game.state.status).toBe('OVER');
+        expect(game.state.winner).toBe(undefined);
+        expect(game.state.xScore).toBe(1);
         expect(game.state.oScore).toBe(1);
       });
     });

@@ -226,6 +226,14 @@ export default class QuantumTicTacToeGame extends Game<
   public applyMove(move: GameMove<QuantumTicTacToeMove>): void {
     let isColliding = false;
 
+
+    // cleans apply move
+    if (move.playerID === this.state.x) {
+      move.move.gamePiece = 'X';
+    } else {
+      move.move.gamePiece = 'O';
+    }
+
     // Validate move
     this._validateMove(move);
 
@@ -339,25 +347,26 @@ export default class QuantumTicTacToeGame extends Game<
    */
   private _checkForGameEnding(): void {
     let isOver = true;
+    let winner: string | undefined;
     Object.values(this._games).forEach(game => {
       if (game.state.status !== 'OVER') {
         isOver = false;
       }
     });
 
-    if (this.state.xScore > this.state.oScore) {
-      this.state.winner = this.state.x;
-    } else if (this.state.xScore < this.state.oScore) {
-      this.state.winner = this.state.o;
+    if (this._xScore > this._oScore) {
+      winner = this.state.x;
+    } else if (this._xScore < this._oScore) {
+      winner = this.state.o;
     } else {
-      this.state.winner = undefined;
+      winner = undefined;
     }
 
     if (isOver) {
       this.state = {
         ...this.state,
         status: 'OVER',
-        winner: this.state.winner,
+        winner,
       };
     }
   }
