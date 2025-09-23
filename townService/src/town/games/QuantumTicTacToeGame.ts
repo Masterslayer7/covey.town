@@ -33,7 +33,6 @@ export default class QuantumTicTacToeGame extends Game<
   private _moveCount = 0;
 
   public constructor() {
-    // TODO: implement me
     super({
       moves: [],
       status: 'WAITING_TO_START',
@@ -66,6 +65,7 @@ export default class QuantumTicTacToeGame extends Game<
   }
 
   protected _join(player: Player): void {
+    // If a player joins that is already in the game
     if (this.state.x === player.id || this.state.o === player.id) {
       throw new InvalidParametersError(PLAYER_ALREADY_IN_GAME_MESSAGE);
     }
@@ -106,6 +106,7 @@ export default class QuantumTicTacToeGame extends Game<
   }
 
   protected _leave(player: Player): void {
+    // If a player that is not in the game tries to leave
     if (this.state.x !== player.id && this.state.o !== player.id) {
       throw new InvalidParametersError(PLAYER_NOT_IN_GAME_MESSAGE);
     }
@@ -127,7 +128,7 @@ export default class QuantumTicTacToeGame extends Game<
           o: undefined,
         };
       }
-      // removes player from sub games
+      // Removes player from sub games
       Object.values(this._games).forEach(game => {
         game.leave(player);
       });
@@ -135,47 +136,33 @@ export default class QuantumTicTacToeGame extends Game<
     // In case someone leaves while game is waiting for players sets x and o to undefined
     else if (this.state.status === 'WAITING_TO_START') {
       if (this.state.x === player.id) {
-        if (this.state.o === undefined) {
-          this.state = {
-            ...this.state,
-            moves: [],
-            status: 'WAITING_TO_START',
-            xScore: 0,
-            oScore: 0,
-            publiclyVisible: {
-              A: [
-                [false, false, false],
-                [false, false, false],
-                [false, false, false],
-              ],
-              B: [
-                [false, false, false],
-                [false, false, false],
-                [false, false, false],
-              ],
-              C: [
-                [false, false, false],
-                [false, false, false],
-                [false, false, false],
-              ],
-            },
-            x: undefined,
-            o: undefined,
-          };
-        } else {
-          this.state = {
-            ...this.state,
-            x: this.state.o,
-          };
-        }
-        Object.values(this._games).forEach(game => {
-          game.leave(player);
-        });
-      } else {
         this.state = {
           ...this.state,
+          moves: [],
+          status: 'WAITING_TO_START',
+          xScore: 0,
+          oScore: 0,
+          publiclyVisible: {
+            A: [
+              [false, false, false],
+              [false, false, false],
+              [false, false, false],
+            ],
+            B: [
+              [false, false, false],
+              [false, false, false],
+              [false, false, false],
+            ],
+            C: [
+              [false, false, false],
+              [false, false, false],
+              [false, false, false],
+            ],
+          },
+          x: undefined,
           o: undefined,
         };
+        // Removes player from subgames
         Object.values(this._games).forEach(game => {
           game.leave(player);
         });
@@ -192,6 +179,7 @@ export default class QuantumTicTacToeGame extends Game<
     // Selects the subgame
     const targetGame = this._games[move.move.board];
 
+    // If a subgame is over and it is not at 0 moves, Dont allow the move
     if (targetGame.state.status === 'OVER' && targetGame.state.moves.length !== 0) {
       throw new InvalidParametersError(INVALID_MOVE_MESSAGE);
     }
@@ -226,7 +214,7 @@ export default class QuantumTicTacToeGame extends Game<
   public applyMove(move: GameMove<QuantumTicTacToeMove>): void {
     let isColliding = false;
 
-    // cleans apply move
+    // cleans incomming move
     if (move.playerID === this.state.x) {
       move.move.gamePiece = 'X';
     } else {
@@ -272,6 +260,7 @@ export default class QuantumTicTacToeGame extends Game<
       }
     }
 
+    // If not colliding updates state with new move and subgames
     if (!isColliding) {
       this.state = {
         ...this.state,
@@ -290,7 +279,7 @@ export default class QuantumTicTacToeGame extends Game<
    * Applies move to targetgame and adds 2 blank moves to other games for turn management
    */
   private _applyMoveWithBlanks(targetGame: TicTacToeGame, move: GameMove<QuantumTicTacToeMove>) {
-    // For each subgame
+    // For each subgame 
     Object.values(this._games).forEach(game => {
       if (game.state.status === 'IN_PROGRESS') {
         if (game.id === targetGame.id) {
@@ -300,7 +289,7 @@ export default class QuantumTicTacToeGame extends Game<
             col: move.move.col,
             gamePiece: move.move.gamePiece,
           });
-          // Applies blanks
+          // Applies blanks  
         } else {
           game.applyMove({
             playerID: move.playerID,
@@ -320,6 +309,7 @@ export default class QuantumTicTacToeGame extends Game<
     let localXScore = 0;
     let localOScore = 0;
 
+    // If a game is over, add score to winner 
     Object.values(this._games).forEach(game => {
       if (game.state.status === 'OVER') {
         if (game.state.winner === this.state.x) {
@@ -330,6 +320,7 @@ export default class QuantumTicTacToeGame extends Game<
       }
     });
 
+    // Updates state with points 
     this.state = {
       ...this.state,
       xScore: localXScore,
@@ -347,12 +338,15 @@ export default class QuantumTicTacToeGame extends Game<
   private _checkForGameEnding(): void {
     let isOver = true;
     let winner: string | undefined;
+
+    // if all game are over, declare winner 
     Object.values(this._games).forEach(game => {
       if (game.state.status !== 'OVER') {
         isOver = false;
       }
     });
 
+    // decide winner 
     if (this._xScore > this._oScore) {
       winner = this.state.x;
     } else if (this._xScore < this._oScore) {
@@ -361,6 +355,7 @@ export default class QuantumTicTacToeGame extends Game<
       winner = undefined;
     }
 
+    // update state with status over and winner 
     if (isOver) {
       this.state = {
         ...this.state,

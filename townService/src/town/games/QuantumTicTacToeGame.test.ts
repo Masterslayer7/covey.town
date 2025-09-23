@@ -53,10 +53,17 @@ describe('QuantumTicTacToeGame', () => {
       expect(game.state.o).toBeUndefined();
       expect(game.state.status).toBe('WAITING_TO_START');
     });
-    it('Should throw player already in game message', () => {
+    it('Should throw player already in game message for x', () => {
       game.join(player1);
       expect(() => {
         game.join(player1);
+      }).toThrow(PLAYER_ALREADY_IN_GAME_MESSAGE);
+    });
+    it('Should throw player already in game message for o', () => {
+      game.join(player1);
+      game.join(player2);
+      expect(() => {
+        game.join(player2);
       }).toThrow(PLAYER_ALREADY_IN_GAME_MESSAGE);
     });
     it('Should throw game full message', () => {
@@ -96,6 +103,9 @@ describe('QuantumTicTacToeGame', () => {
     });
     describe('when one player is in the game', () => {
       it('when the game is not in progress, it should set the game status to WAITING_TO_START and remove the player', () => {
+        const { publiclyVisible } = game.state;
+        const boards: Array<'A' | 'B' | 'C'> = ['A', 'B', 'C'];
+
         game.join(player1);
         expect(game.state.x).toEqual(player1.id);
         expect(game.state.o).toBeUndefined();
@@ -106,6 +116,28 @@ describe('QuantumTicTacToeGame', () => {
         expect(game.state.o).toBeUndefined();
         expect(game.state.status).toEqual('WAITING_TO_START');
         expect(game.state.winner).toBeUndefined();
+
+        // Loop through every single cell of every board.
+        for (const board of boards) {
+          for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
+              // This assertion is highly specific and will fail if any cell is not `false`.
+              expect(game.state.publiclyVisible[board][row][col]).toBe(false);
+            }
+          }
+        }
+
+        // Also check that the structure is correct (3 boards, 3x3 grid)
+        expect(Object.keys(publiclyVisible).length).toBe(3);
+        expect(publiclyVisible.A.length).toBe(3);
+        expect(publiclyVisible.A[0].length).toBe(3);
+
+        // @ts-expect-error - private property
+        expect(game._games.A.state.x).toBe(undefined);
+        // @ts-expect-error - private property
+        expect(game._games.B.state.x).toBe(undefined);
+        // @ts-expect-error - private property
+        expect(game._games.C.state.x).toBe(undefined);
       });
 
       it('Should give player not in game message', () => {
@@ -182,15 +214,6 @@ describe('QuantumTicTacToeGame', () => {
         }).toThrow(new InvalidParametersError(MOVE_NOT_YOUR_TURN_MESSAGE));
       });
 
-      // it('Should throw error if clicking on publiclly visiable piece', () => {
-      //   // X gets a win on board A
-      //   makeMove(player1, 'A', 0, 0); // X
-      //   makeMove(player2, 'A', 0, 0); // O -> colliison
-      //   makeMove(player1, 'B', 0, 0); // X
-
-      //   // Publically visable piece
-      //   expect(() => makeMove(player2, 'A', 0, 0)).toThrowError(INVALID_MOVE_MESSAGE);
-      // });
       it('Should throw error if clicking on your own piece', () => {
         // X gets a win on board A
         makeMove(player1, 'A', 0, 0); // X
@@ -214,6 +237,8 @@ describe('QuantumTicTacToeGame', () => {
         expect(game.state.moves.length).toBe(5);
         expect(game.state.xScore).toBe(1);
         expect(game.state.oScore).toBe(0);
+        // @ts-expect-error - private property
+        expect(game._moveCount).toBe(5);
       });
     });
 
