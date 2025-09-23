@@ -226,7 +226,6 @@ export default class QuantumTicTacToeGame extends Game<
   public applyMove(move: GameMove<QuantumTicTacToeMove>): void {
     let isColliding = false;
 
-
     // cleans apply move
     if (move.playerID === this.state.x) {
       move.move.gamePiece = 'X';
