@@ -198,10 +198,11 @@ export default class QuantumTicTacToeGame extends Game<
       }
     }
 
-    // A move is only valid if it is the player's turn
-    if (move.move.gamePiece === 'X' && this._moveCount % 2 === 1) {
-      throw new InvalidParametersError(MOVE_NOT_YOUR_TURN_MESSAGE);
-    } else if (move.move.gamePiece === 'O' && this._moveCount % 2 === 0) {
+    // Determine whose turn it is supposed to be.
+    const expectedPiece = this._moveCount % 2 === 0 ? 'X' : 'O';
+
+    // Check if the player making the move is the one we expect.
+    if (move.move.gamePiece !== expectedPiece) {
       throw new InvalidParametersError(MOVE_NOT_YOUR_TURN_MESSAGE);
     }
 
@@ -279,7 +280,7 @@ export default class QuantumTicTacToeGame extends Game<
    * Applies move to targetgame and adds 2 blank moves to other games for turn management
    */
   private _applyMoveWithBlanks(targetGame: TicTacToeGame, move: GameMove<QuantumTicTacToeMove>) {
-    // For each subgame 
+    // For each subgame
     Object.values(this._games).forEach(game => {
       if (game.state.status === 'IN_PROGRESS') {
         if (game.id === targetGame.id) {
@@ -289,7 +290,7 @@ export default class QuantumTicTacToeGame extends Game<
             col: move.move.col,
             gamePiece: move.move.gamePiece,
           });
-          // Applies blanks  
+          // Applies blanks
         } else {
           game.applyMove({
             playerID: move.playerID,
@@ -309,7 +310,7 @@ export default class QuantumTicTacToeGame extends Game<
     let localXScore = 0;
     let localOScore = 0;
 
-    // If a game is over, add score to winner 
+    // If a game is over, add score to winner
     Object.values(this._games).forEach(game => {
       if (game.state.status === 'OVER') {
         if (game.state.winner === this.state.x) {
@@ -320,7 +321,7 @@ export default class QuantumTicTacToeGame extends Game<
       }
     });
 
-    // Updates state with points 
+    // Updates state with points
     this.state = {
       ...this.state,
       xScore: localXScore,
@@ -339,14 +340,14 @@ export default class QuantumTicTacToeGame extends Game<
     let isOver = true;
     let winner: string | undefined;
 
-    // if all game are over, declare winner 
+    // if all game are over, declare winner
     Object.values(this._games).forEach(game => {
       if (game.state.status !== 'OVER') {
         isOver = false;
       }
     });
 
-    // decide winner 
+    // decide winner
     if (this._xScore > this._oScore) {
       winner = this.state.x;
     } else if (this._xScore < this._oScore) {
@@ -355,7 +356,7 @@ export default class QuantumTicTacToeGame extends Game<
       winner = undefined;
     }
 
-    // update state with status over and winner 
+    // update state with status over and winner
     if (isOver) {
       this.state = {
         ...this.state,
